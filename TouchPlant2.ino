@@ -7,6 +7,7 @@
 const int NUM_LEDS = 119; // aantal ledjes op de strip
 int brightness = 255;
 const int aantalSensoren = 4;
+bool audience = true;
 
 // Maak een array van vier TouchSensor objecten aan
 TouchSensor sensors[aantalSensoren];
@@ -37,6 +38,16 @@ void shuffleArray(int* array, int size) {
     array[i] = array[j];
     array[j] = temp;
   }
+}
+
+void startSequence() {
+  audience = false;
+  for (int i = 0; i < NUM_LEDS; i++) {
+    strip.setPixelColor(i, strip.Color(0,255,0));
+    strip.show();
+    delay(100);
+  }
+
 }
 
 void setup() {
@@ -73,6 +84,8 @@ void setup() {
 
   // Start de capacitieve touch unit
   TouchSensor::start();
+
+  Serial.print("setup done");
 }
 
 // Functie om de lastTouch array te printen
@@ -107,31 +120,47 @@ void handleTouch(int i, bool touch) {
   uint32_t color = getColor(i);
 
   int currentNumber = number[i];
+  int maxLedsPerSensor = NUM_LEDS / aantalSensoren;
 
-  if(!touch) {
-    for (int x=0; x < NUM_LEDS/aantalSensoren; x++) {
-      strip.setPixelColor(ledstripParts[i][x], strip.Color(0,0,0));
+  if (!touch) {
+    // Zet alle LEDs van dit segment uit als de sensor niet wordt aangeraakt
+    for (int x = 0; x < maxLedsPerSensor; x++) {
+      strip.setPixelColor(ledstripParts[i][x], strip.Color(0, 0, 0));
     }
   } else {
-    if (currentNumber != 0) {
-      strip.setPixelColor(ledstripParts[i][currentNumber-1], strip.Color(0,0,0));
+    // Zet de vorige LED uit, ook als currentNumber op 0 wordt gezet
+    int previousNumber = currentNumber - 1;
+    if (currentNumber == 0) {
+      previousNumber = maxLedsPerSensor - 1; // als we op LED 0 zijn, zet de laatste LED uit
     }
+
+    // Zet de vorige LED uit
+    strip.setPixelColor(ledstripParts[i][previousNumber], strip.Color(0, 0, 0));
+
+    // Zet de huidige LED aan
     strip.setPixelColor(ledstripParts[i][currentNumber], color);
-    if(currentNumber == NUM_LEDS/aantalSensoren) {
+
+    // Verhoog currentNumber en reset naar 0 als het einde is bereikt
+    currentNumber++;
+    if (currentNumber >= maxLedsPerSensor) {
       currentNumber = 0;
-    } else {
-      currentNumber++;
     }
+
+    // Sla de nieuwe waarde op
     number[i] = currentNumber;
   }
 
-    strip.show();
-    delay(1);
+  // Update de strip
+  strip.show();
+  delay(1);
 }
+
 
 void loop() {
   // Lees en controleer elke sensor op aanraking
-  for (int i = 0; i < aantalSensoren; i++) {
+
+  if (audience) {
+    for (int i = 0; i < aantalSensoren; i++) {
     bool touch = sensors[i].read();
 
     // Als de status is veranderd, print dan het resultaat
@@ -143,9 +172,30 @@ void loop() {
     }
     
     handleTouch(i, touch);
+  } 
+  if (Serial.available() > 0) {
+    // Lees de inkomende string tot een nieuwe lijn (\n) of een ander teken
+    String input = Serial.readStringUntil('\n'); // Je kunt '\n' vervangen door een ander terminatiekarakter
 
-
+    // Controleer of de ontvangen string "start" is
+    if (input == "start") {
+      startSequence();
+    }
   }
+  } else {
+    for(int i = 255; i>10; i--){
+      strip.setBrightness(i);
+      strip.show();
+      i<150 ? delay(20) : delay(10);
+    }
+    for(int i = 10; i<255; i++){
+      strip.setBrightness(i);
+      strip.show();
+      i<150 ? delay(20) : delay(10);
+    }
+    
+  }
+  
 
   
 }
