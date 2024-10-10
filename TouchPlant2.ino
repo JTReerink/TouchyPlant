@@ -15,6 +15,7 @@ TouchSensor sensors[aantalSensoren];
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, NeoPIN, NEO_GRB + NEO_KHZ800);
 
 int ledstripParts[aantalSensoren][NUM_LEDS/aantalSensoren];
+int number[aantalSensoren];
 
 
 // Stel tuningswaarden in voor elke sensor
@@ -27,6 +28,16 @@ int pins[4] = {1, 2, 3, 8};
 
 // Variabelen om de vorige status van de sensor te onthouden
 bool lastTouch[aantalSensoren];
+
+void shuffleArray(int* array, int size) {
+  for (int i = size - 1; i > 0; i--) {
+    int j = random(0, i + 1); // Kies een willekeurige index
+    // Verwissel array[i] en array[j]
+    int temp = array[i];
+    array[i] = array[j];
+    array[j] = temp;
+  }
+}
 
 void setup() {
   // Start een serialmonitor
@@ -49,6 +60,8 @@ void setup() {
       }
       ledstripParts[i][j] = i + j * aantalSensoren;
     }
+    shuffleArray(ledstripParts[i], NUM_LEDS/aantalSensoren);
+
   }
 
 
@@ -73,31 +86,47 @@ void printLastTouch() {
   Serial.println(); // Nieuwe regel na het printen van de array
 }
 
-// uint32_t getColor(int i) {
-//   switch (i) {
-//     case 0:
-    
-//       return strip.Color(255, 0, 0);
+uint32_t getColor(int i) {
+  switch (i) {
+    case 0:
+      return strip.Color(255, 0, 0);
 
-//     case 1:
-//       return strip.Color(0, 255, 0);
+    case 1:
+      return strip.Color(0, 255, 0);
 
-//     case 2:
-//       return strip.Color(0, 0, 255);
-//   }
-// }
+    case 2:
+      return strip.Color(0, 0, 255);
+
+      
+    case 3:
+      return strip.Color(255, 0, 150);
+  }
+}
 
 void handleTouch(int i, bool touch) {
-  // uint32_t color = getColor(i);
+  uint32_t color = getColor(i);
 
-  for(int j=0; j < (NUM_LEDS/aantalSensoren); j++) {
-    if(!touch) {
-      strip.setPixelColor(ledstripParts[i][j], strip.Color(0,0,0));
-    } else {
-      strip.setPixelColor(ledstripParts[i][j], strip.Color(225,0,0));
+  int currentNumber = number[i];
+
+  if(!touch) {
+    for (int x=0; x < NUM_LEDS/aantalSensoren; x++) {
+      strip.setPixelColor(ledstripParts[i][x], strip.Color(0,0,0));
     }
+  } else {
+    if (currentNumber != 0) {
+      strip.setPixelColor(ledstripParts[i][currentNumber-1], strip.Color(0,0,0));
+    }
+    strip.setPixelColor(ledstripParts[i][currentNumber], color);
+    if(currentNumber == NUM_LEDS/aantalSensoren) {
+      currentNumber = 0;
+    } else {
+      currentNumber++;
+    }
+    number[i] = currentNumber;
   }
-  strip.show();
+
+    strip.show();
+    delay(1);
 }
 
 void loop() {
