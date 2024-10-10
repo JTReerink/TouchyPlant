@@ -5,9 +5,14 @@
 // Definieer de ledstrip variabelen
 #define NeoPIN 4 // de pin waarop het signaal naar de strip gaat
 const int NUM_LEDS = 119; // aantal ledjes op de strip
-int brightness = 255;
+int stripBrightness = 255;
 const int aantalSensoren = 4;
 bool audience = true;
+
+// Dit bepaalt de snelheid van de golfbeweging
+float waveSpeed = 0.1; // Hoe sneller de golf, hoe hoger het getal
+float phase = 0; // Faseverschuiving voor de golf
+
 
 // Maak een array van vier TouchSensor objecten aan
 TouchSensor sensors[aantalSensoren];
@@ -58,7 +63,7 @@ void setup() {
   }
 
   // Setup de ledstrip
-  strip.setBrightness(brightness);
+  strip.setBrightness(stripBrightness);
   strip.begin();
   strip.show();
 
@@ -85,7 +90,7 @@ void setup() {
   // Start de capacitieve touch unit
   TouchSensor::start();
 
-  Serial.print("setup done");
+  Serial.println("setup done");
 }
 
 // Functie om de lastTouch array te printen
@@ -183,18 +188,43 @@ void loop() {
     }
   }
   } else {
-    for(int i = 255; i>10; i--){
-      strip.setBrightness(i);
-      strip.show();
-      i<150 ? delay(20) : delay(10);
-    }
-    for(int i = 10; i<255; i++){
-      strip.setBrightness(i);
-      strip.show();
-      i<150 ? delay(20) : delay(10);
-    }
     
+   // Loop over alle LEDs
+  for (int led = 0; led < NUM_LEDS; led++) {
+    // Bepaal de helderheid voor elke LED gebaseerd op de sinusgolf en de positie
+    // Maak gebruik van een fase om de golf te laten bewegen
+    int ledBrightness = (sin(led * 0.1 + phase) * 127 + 128); // Helderheid varieert van 0 tot 255
+
+    // Zorg ervoor dat de helderheid binnen de grenzen blijft (5-255)
+    if (ledBrightness < 5) {
+      ledBrightness = 5;
+    } else if (ledBrightness > 255) {
+      ledBrightness = 255;
+    }
+
+    // Stel de kleur voor de LED in
+    strip.setPixelColor(led, strip.Color(0, ledBrightness, 0));
   }
+
+  // Update de fase voor de volgende iteratie, dit zorgt voor beweging in de golf
+  phase -= waveSpeed; // Verander hier de richting van de golf
+
+  // Update de LED-strip
+  strip.show();
+  delay(150); // Delay voor de snelheid van de animatie
+  }
+
+
+    // for(int i = 255; i>10; i--){
+    //   strip.setBrightness(i);
+    //   strip.show();
+    //   i<150 ? delay(20) : delay(10);
+    // }
+    // for(int i = 10; i<255; i++){
+    //   strip.setBrightness(i);
+    //   strip.show();
+    //   i<150 ? delay(20) : delay(10);
+    // }
   
 
   
