@@ -8,13 +8,19 @@ const int NUM_LEDS = 119; // aantal ledjes op de strip
 int stripBrightness = 255;
 const int aantalSensoren = 4;
 bool audience = true;
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, NeoPIN, NEO_GRB + NEO_KHZ800);
+uint32_t stripColors[] = {
+  strip.Color(75, 214, 212), // licht blauw
+  strip.Color(230, 50, 0), // oranje
+  strip.Color(255, 255, 0), // geel
+  strip.Color(0, 0, 255)  // blauw
+};
 
 // Dit bepaalt de snelheid van de golfbeweging van de wave animatie
 float waveSpeed = 0.1; // Hoe sneller de golf, hoe hoger het getal
 float phase = 0; // Faseverschuiving voor de golf
 
 // Initieer ledtrip
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, NeoPIN, NEO_GRB + NEO_KHZ800);
 
 int ledstripParts[aantalSensoren][NUM_LEDS/aantalSensoren];
 int number[aantalSensoren];
@@ -104,25 +110,7 @@ void printLastTouch() {
   Serial.println(); // Nieuwe regel na het printen van de array
 }
 
-uint32_t getColor(int i) {
-  switch (i) {
-    case 0:
-      return strip.Color(255, 0, 0);
-
-    case 1:
-      return strip.Color(0, 255, 0);
-
-    case 2:
-      return strip.Color(0, 0, 255);
-
-      
-    case 3:
-      return strip.Color(255, 0, 150);
-  }
-}
-
 void handleTouch(int i, bool touch) {
-  uint32_t color = getColor(i);
 
   int currentNumber = number[i];
   int maxLedsPerSensor = NUM_LEDS / aantalSensoren;
@@ -143,7 +131,7 @@ void handleTouch(int i, bool touch) {
     strip.setPixelColor(ledstripParts[i][previousNumber], strip.Color(0, 0, 0));
 
     // Zet de huidige LED aan
-    strip.setPixelColor(ledstripParts[i][currentNumber], color);
+    strip.setPixelColor(ledstripParts[i][currentNumber], stripColors[i]);
 
     // Verhoog currentNumber en reset naar 0 als het einde is bereikt
     currentNumber++;
