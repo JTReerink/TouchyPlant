@@ -9,13 +9,9 @@ int stripBrightness = 255;
 const int aantalSensoren = 4;
 bool audience = true;
 
-// Dit bepaalt de snelheid van de golfbeweging
+// Dit bepaalt de snelheid van de golfbeweging van de wave animatie
 float waveSpeed = 0.1; // Hoe sneller de golf, hoe hoger het getal
 float phase = 0; // Faseverschuiving voor de golf
-
-
-// Maak een array van vier TouchSensor objecten aan
-TouchSensor sensors[aantalSensoren];
 
 // Initieer ledtrip
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, NeoPIN, NEO_GRB + NEO_KHZ800);
@@ -23,10 +19,11 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, NeoPIN, NEO_GRB + NEO_KHZ8
 int ledstripParts[aantalSensoren][NUM_LEDS/aantalSensoren];
 int number[aantalSensoren];
 
+// Maak een array van vier TouchSensor objecten aan
+TouchSensor sensors[aantalSensoren];
 
 // Stel tuningswaarden in voor elke sensor
 ctsu_pin_settings_t mySettings = {.div=CTSU_CLOCK_DIV_18, .gain=CTSU_ICO_GAIN_100, .ref_current=0, .offset=100, .count=3};
-
 
 // Drempelwaarden en pinnen voor de vier sensoren
 unsigned int threshold = 40000;
@@ -34,6 +31,9 @@ int pins[4] = {1, 2, 3, 8};
 
 // Variabelen om de vorige status van de sensor te onthouden
 bool lastTouch[aantalSensoren];
+
+
+
 
 void shuffleArray(int* array, int size) {
   for (int i = size - 1; i > 0; i--) {
